@@ -7,4 +7,22 @@ Run a command on a server based on an URL
 Takes environment variables:
 
 * PORT - defaults to 3000
-* CONFIG_PATH - defaults to ./urltocmd.json
+* URLTOCMD_PATH - defaults to ./urltocmd.json
+
+=== URLTOCMD_PATH format
+
+The json file MUST be in this format:
+
+.urltocmd.json
+[source,json]
+----
+[
+	{
+		"url": "/some-url",
+		"cmd": "command to be ran on the server"
+	},
+		"url": "/some-other-url",
+		"cmd": "Another command to be ran on the server"
+	}
+]
+----
