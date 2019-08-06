@@ -21,6 +21,7 @@ The json file MUST be in this format:
 		"url": "/some-url",
 		"cmd": "command to be ran on the server"
 	},
+	{
 		"url": "/some-other-url",
 		"cmd": "Another command to be ran on the server"
 	}
