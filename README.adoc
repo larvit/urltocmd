@@ -38,5 +38,7 @@ Or from a file:
 
 === Via docker
 
+(Does not work, PRs or other fix welcomed)
+
 Build the image: `docker build -t urltocmd .`
 Run: `cat urlsAndCmds.json | docker run --rm -t urltocmd`
