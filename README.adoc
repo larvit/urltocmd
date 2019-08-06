@@ -1,3 +1,10 @@
 = URL to Command
 
 Run a command on a server based on an URL
+
+== Options
+
+Takes environment variables:
+
+* PORT - defaults to 3000
+* CONFIG_PATH - defaults to ./urltocmd.json
