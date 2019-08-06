@@ -7,13 +7,13 @@ Run a command on a server based on an URL
 Takes environment variables:
 
 * PORT - defaults to 3000
-* URLTOCMD_PATH - defaults to ./urltocmd.json
 
-=== URLTOCMD_PATH format
+== How to run
 
-The json file MUST be in this format:
+The command takes a JSON as input and executes a web server based on the content.
 
-.urltocmd.json
+The JSON must be structured as follows:
+
 [source,json]
 ----
 [
@@ -27,3 +27,16 @@ The json file MUST be in this format:
 	}
 ]
 ----
+
+For example, it can be ran like this:
+
+`echo '[{"url":"/some-url","cmd":"do something"}]' | npm start`
+
+Or from a file:
+
+`cat urlsAndCmds.json | npm start`
+
+=== Via docker
+
+Build the image: `docker build -t urltocmd .`
+Run: `cat urlsAndCmds.json | docker run --rm -t urltocmd`
