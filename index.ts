@@ -60,7 +60,9 @@ stdin.on('end', () => {
 		res.end('Accepted - Running command for URL: "' + req.url + '"');
 
 		exec(cmd, (err, stdout, stderr) => {
-			if (err) throw err;
+			if (err) {
+				console.error('Command failed: "' + cmd + '", err: ' + err.message);
+			}
 
 			if (stderr) {
 				console.error('stderr: ' + stderr);
