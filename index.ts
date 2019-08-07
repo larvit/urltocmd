@@ -13,7 +13,15 @@ interface urltocmd {
 	cmd: string;
 }
 
-const activeJobs: string[] = []; // A list of uuids of active jobs
+interface jobHistoryEntry {
+	uuid: string;
+	cmd: string;
+	exitStatus: number | undefined;
+	stdout: string;
+	stderr: string;
+}
+
+const jobHistory: jobHistoryEntry[] = [];
 const inputChunks: string[] = []; // stdin will stream in chunks, this is an array where we collect them
 let inputStarted: boolean = false; // This is an indicator if we have started to recieve stdin
 
@@ -35,30 +43,36 @@ stdin.on('end', () => {
 
 	// This functionis ran on each request to the server
 	function requestHandler(req: http.IncomingMessage, res: http.ServerResponse): void {
+		res.setHeader('Content-Type', 'application/json');
+		res.setHeader('X-Powered-By', 'urltocmd');
 
 		// req.url should always be set, but in the typescript definitions it says it can be undefined... I wonder how
 		if (req.url === undefined) {
 			res.statusCode = 400;
-			res.end('Your request is utterly invalid in a deeply disturbing way');
+			res.end(JSON.stringify({ error: 'Your request is utterly invalid in a deeply disturbing way' }));
 			return;
 		}
 
 		if (req.url.startsWith('/status?')) {
 			const statusUuid: string = req.url.split('?')[1];
-			if (activeJobs.includes(statusUuid)) {
-				res.statusCode = 202;
-				res.end('');
-			} else {
-				res.statusCode = 404;
-				res.end('Not Found - Job might be finnished or was never created');
+
+			for (let i = 0; jobHistory.length !== i; i ++) {
+				const entry = jobHistory[i];
+				if (entry.uuid === statusUuid) {
+					res.statusCode = 200;
+					res.end(JSON.stringify({ message: 'Job found', job: entry }));
+					return;
+				}
 			}
-			return;
+
+			res.statusCode = 404;
+			res.end(JSON.stringify({ error: 'Not Found - Job not found in history', uuid: statusUuid }));
 		}
 
 		// If this specific url does not exist in the stdin config, its a 404
 		if (!urls.includes(req.url)) {
 			res.statusCode = 404;
-			res.end('Not Found - No command found for URL: "' + req.url + '"');
+			res.end(JSON.stringify({ error: 'Not Found - No command found for URL', url: req.url }));
 			return;
 		}
 
@@ -70,37 +84,59 @@ stdin.on('end', () => {
 
 		if (cmd === false) {
 			res.statusCode = 500;
-			res.end('Internal Server Error - Command not found for URL: "' + req.url + '"');
+			res.end(JSON.stringify({ error: 'Internal Server Error - URL in command list, but no command found for it', url: req.url }));
 			return;
 		}
 
 		if (!cmd) {
 			res.statusCode = 500;
-			res.end('Internal Server Error - Cmd: "' + cmd + '" is invalid for URL: "' + req.url + '"');
+			res.end(JSON.stringify({ error: 'Internal Server Error - URL in command list, but the command is empty', cmd, url: req.url }));
 			return;
 		}
 
-		const jobUuid = uuid.v1();
-		activeJobs.push(jobUuid);
+		const job: jobHistoryEntry = {
+			uuid: uuid.v1(),
+			cmd,
+			exitStatus: undefined,
+			stdout: '',
+			stderr: '',
+		};
+		jobHistory.push(job);
 
-		console.log('Running command: "' + cmd + '" for URL: "' + req.url + '" with uuid: ' + jobUuid);
+		// Remove the last entry of the jobHistory if it is larger than 1000
+		if (jobHistory.length > 1000) {
+			jobHistory.shift();
+		}
+
+		console.log('Running command: "' + cmd + '" for URL: "' + req.url + '" with uuid: ' + job.uuid);
 		res.statusCode = 202;
-		res.end('Accepted - Running command for URL: "' + req.url + '"\nuuid: ' + jobUuid);
+		res.end(JSON.stringify({ message: 'Accepted', url: req.url, cmd, uuid: job.uuid }));
 
-		exec(cmd, (err, stdout, stderr) => {
+		exec(cmd, (err: any /* Any, because the default error type does not include "status", but this one does */, stdout, stderr) => {
 			if (err) {
-				console.error(jobUuid + ': Command failed: "' + cmd + '", err: ' + err.message);
+				console.error(job.uuid + ': Command failed: "' + cmd + '", err: ' + err.message);
+				job.exitStatus = err.status;
+				job.stderr += err.message;
+
+				// Something failed, so if we did not get a proper exit status code, default to 1
+				if (job.exitStatus === undefined) {
+					job.exitStatus = 1;
+				}
+
+				return;
 			}
 
 			if (stderr) {
-				console.error(jobUuid + ': stderr: ' + stderr);
+				console.error(job.uuid + ': stderr: ' + stderr);
+				job.stderr += stderr;
 			}
 
 			if (stdout) {
-				console.log(jobUuid + ': stdout: ' + stdout);
+				console.log(job.uuid + ': stdout: ' + stdout);
+				job.stdout += stdout;
 			}
 
-			activeJobs.splice(activeJobs.indexOf(jobUuid), 1);
+			job.exitStatus = 0;
 		});
 	}
 
