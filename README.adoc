@@ -8,6 +8,13 @@ Takes environment variables:
 
 * PORT - defaults to 3000
 
+For simplicity, add these to the .env file. Like this:
+
+..env
+----
+PORT=5400
+----
+
 == How to run
 
 The command takes a JSON as input and executes a web server based on the content.
@@ -35,10 +42,3 @@ For example, it can be ran like this:
 Or from a file:
 
 `cat urlsAndCmds.json | npm start`
-
-=== Via docker
-
-(Does not work, PRs or other fix welcomed)
-
-Build the image: `docker build -t urltocmd .`
-Run: `cat urlsAndCmds.json | docker run --rm -t urltocmd`
