@@ -1,5 +1,9 @@
+import * as dotenv from 'dotenv';
 import http from 'http';
 import { exec } from 'child_process';
+
+dotenv.config();
+
 const stdin = process.stdin;
 const port = process.env.PORT || 3000;
 
@@ -9,11 +13,13 @@ interface urltocmd {
 }
 
 const inputChunks: string[] = [];
+let inputStarted: boolean = false;
 
 stdin.resume();
 stdin.setEncoding('utf8');
 
 stdin.on('data', chunk => {
+	inputStarted = true;
 	inputChunks.push(chunk);
 });
 
@@ -70,3 +76,10 @@ stdin.on('end', () => {
 		console.log('Server listening to ' + port);
 	});
 });
+
+setTimeout(() => {
+	if (inputStarted === false) {
+		console.error('No input received on STDIN, can not create any URLs to run commands from, exiting.');
+		process.exit(1);
+	}
+}, 100);
