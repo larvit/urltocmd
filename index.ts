@@ -31,7 +31,7 @@ stdin.setEncoding('utf8');
 // We get data on stdin \o/
 stdin.on('data', chunk => {
 	inputStarted = true;
-	inputChunks.push(chunk);
+	inputChunks.push(chunk.toString());
 });
 
 // When all stdin is read, do this
