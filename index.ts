@@ -151,14 +151,16 @@ stdin.on('end', () => {
 	}
 
 	http.createServer(requestHandler).listen(port, (): void => {
-		console.log('Server listening to ' + port);
-		if (logfile) fs.appendFileSync(logfile, 'Server listening to ' + port + '\n');
+		console.log((new Date()).toISOString() + ' - Server listening to ' + port);
+		if (logfile) fs.appendFileSync(logfile, (new Date()).toISOString() + ' - Server listening to ' + port + '\n');
 	});
 });
 
 setTimeout(() => {
 	if (inputStarted === false) {
-		console.error('No input received on STDIN, can not create any URLs to run commands from, exiting.');
+		const errMsg = (new Date()).toISOString() + ' - No input received on STDIN, can not create any URLs to run commands from, exiting.';
+		console.error(errMsg);
+		if (logfile) fs.appendFileSync(logfile, errMsg + '\n');
 		process.exit(1);
 	}
 }, 100);
