@@ -6,13 +6,22 @@ Run a command on a server based on an URL
 
 Takes environment variables:
 
-* PORT - defaults to 3000
+=== PORT
+
+*defaults to 3000*
+
+=== LOGFILE
+
+Set to have the log written to this path in addition to stdout
+
+=== Using .env file
 
 For simplicity, add these to the .env file. Like this:
 
 ..env
 ----
 PORT=5400
+LOGFILE=/var/log/urltocmd.log
 ----
 
 == How to run

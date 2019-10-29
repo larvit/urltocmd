@@ -2,11 +2,13 @@ import * as dotenv from 'dotenv';
 import uuid from 'uuid';
 import http from 'http';
 import { exec } from 'child_process';
+import fs from 'fs';
 
 dotenv.config(); // Populate process.env from .env file
 
 const stdin = process.stdin;
 const port = process.env.PORT || 3000; // Default to port 3000 if none is provided in process.env.PORT
+const logfile = process.env.LOGFILE;
 
 interface urltocmd {
 	url: string;
@@ -108,13 +110,17 @@ stdin.on('end', () => {
 			jobHistory.shift();
 		}
 
-		console.log('Running command: "' + cmd + '" for URL: "' + req.url + '" with uuid: ' + job.uuid);
+		const logStr = (new Date()).toISOString() + ' - Running command: "' + cmd + '" for URL: "' + req.url + '" with uuid: ' + job.uuid;
+		console.log(logStr);
+		if (logfile) fs.appendFileSync(logfile, logStr + '\n');
 		res.statusCode = 202;
 		res.end(JSON.stringify({ message: 'Accepted', url: req.url, cmd, uuid: job.uuid }));
 
 		exec(cmd, (err: any /* Any, because the default error type does not include "status", but this one does */, stdout, stderr) => {
 			if (err) {
-				console.error(job.uuid + ': Command failed: "' + cmd + '", err: ' + err.message);
+				const cmdFailedLogStr = (new Date()).toISOString() + ' - ' + job.uuid + ': Command failed: "' + cmd + '", err: ' + err.message;
+				console.error(cmdFailedLogStr);
+				if (logfile) fs.appendFileSync(logfile, cmdFailedLogStr + '\n');
 				job.exitStatus = err.status;
 				job.stderr += err.message;
 
@@ -127,12 +133,16 @@ stdin.on('end', () => {
 			}
 
 			if (stderr) {
-				console.error(job.uuid + ': stderr: ' + stderr);
+				const stderrLogStr = (new Date()).toISOString() + ' - ' + job.uuid + ': stderr: ' + stderr;
+				console.error(stderrLogStr);
+				if (logfile) fs.appendFileSync(logfile, stderrLogStr + '\n');
 				job.stderr += stderr;
 			}
 
 			if (stdout) {
-				console.log(job.uuid + ': stdout: ' + stdout);
+				const stdoutLogStr = (new Date()).toISOString() + ' - ' + job.uuid + ': stdout: ' + stdout;
+				console.log(stdoutLogStr);
+				if (logfile) fs.appendFileSync(logfile, stdoutLogStr + '\n');
 				job.stdout += stdout;
 			}
 
@@ -142,6 +152,7 @@ stdin.on('end', () => {
 
 	http.createServer(requestHandler).listen(port, (): void => {
 		console.log('Server listening to ' + port);
+		if (logfile) fs.appendFileSync(logfile, 'Server listening to ' + port + '\n');
 	});
 });
 
