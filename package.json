@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/dotenv": "8.2.0",
     "@types/node": "18.15.1",
-    "@types/uuid": "3.4.7",
+    "@types/uuid": "3.4.10",
     "ts-node": "8.6.2",
     "typescript": "3.7.5"
   }
