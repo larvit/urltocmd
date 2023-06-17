@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/larvit/urltocmd#readme",
   "dependencies": {
-    "dotenv": "16.3.0",
+    "dotenv": "16.3.1",
     "uuid": "9.0.0"
   },
   "devDependencies": {
