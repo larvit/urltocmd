@@ -21,7 +21,7 @@
     "uuid": "9.0.1"
   },
   "devDependencies": {
-    "@types/dotenv": "8.2.0",
+    "@types/dotenv": "8.2.3",
     "@types/node": "20.19.31",
     "@types/uuid": "9.0.8",
     "ts-node": "10.9.2",
